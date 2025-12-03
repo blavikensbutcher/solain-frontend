@@ -12,6 +12,12 @@ import WorkoutList from "./WorkoutList";
 
 const PROGRAM_ID = "2BqFVR96CLqZ6AHue5FbUCXFk4zdiASaoL97wND53BT3";
 
+function isMobile(): boolean {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+}
+
 function App() {
   const [provider, setProvider] = useState<anchor.AnchorProvider | null>(null);
   const [walletPubkey, setWalletPubkey] = useState<PublicKey | null>(null);
@@ -57,12 +63,12 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
-        walletPubkey={walletPubkey} 
+      <Header
+        walletPubkey={walletPubkey}
         onConnectWallet={connectWallet}
         onDisconnectWallet={disconnectWallet}
       />
-      
+
       <main className="container mx-auto py-8 px-4">
         {!walletPubkey ? (
           <div className="flex items-center justify-center min-h-[60vh]">
@@ -72,14 +78,30 @@ function App() {
                   <Dumbbell className="h-16 w-16 text-primary" />
                 </div>
                 <div className="text-center space-y-2">
-                  <h2 className="text-2xl font-semibold">Welcome to Solain 👋</h2>
+                  <h2 className="text-2xl font-semibold">
+                    Welcome to Solain 👋
+                  </h2>
                   <p className="text-muted-foreground">
                     Connect your wallet to start tracking your workouts on-chain
                   </p>
                 </div>
-                <Button onClick={connectWallet} size="lg" className="mt-4">
-                  Connect Phantom Wallet
-                </Button>
+                {!walletPubkey && isMobile() ? (
+                  <Button
+                    onClick={() => {
+                      const url = encodeURIComponent(window.location.href);
+                      window.open(
+                        `https://phantom.app/ul/browse/${url}?ref=${url}`,
+                        "_blank"
+                      );
+                    }}
+                  >
+                    Open in Phantom App
+                  </Button>
+                ) : (
+                  <Button onClick={connectWallet}>
+                    Connect Phantom Wallet
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>
