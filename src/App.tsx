@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import * as anchor from "@coral-xyz/anchor";
 import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
 import { AnchorProvider } from "@coral-xyz/anchor";
@@ -9,8 +9,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WorkoutList from "./WorkoutList";
+import { WorkoutAccountResult } from "./types/workout.types"; // Імпорт типу
+import { WorkoutSummary } from "./WorkoutSummary";
 
-const PROGRAM_ID = "2BqFVR96CLqZ6AHue5FbUCXFk4zdiASaoL97wND53BT3";
+const PROGRAM_ID = idlJson.address;
 
 function isMobile(): boolean {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -21,6 +23,9 @@ function isMobile(): boolean {
 function App() {
   const [provider, setProvider] = useState<anchor.AnchorProvider | null>(null);
   const [walletPubkey, setWalletPubkey] = useState<PublicKey | null>(null);
+  
+  const [workouts, setWorkouts] = useState<WorkoutAccountResult[]>([]);
+  const [loadingWorkouts, setLoadingWorkouts] = useState(false);
 
   async function connectWallet() {
     if (!(window as any).solana) {
@@ -50,6 +55,7 @@ function App() {
       }
       setWalletPubkey(null);
       setProvider(null);
+      setWorkouts([]); // Очищаємо дані при виході
     } catch (err) {
       console.error(err);
     }
@@ -61,8 +67,43 @@ function App() {
     }
   }, []);
 
+  // Функція завантаження даних (тепер вона тут)
+  const fetchWorkouts = useCallback(async () => {
+    if (!provider || !walletPubkey) return;
+
+    setLoadingWorkouts(true);
+    try {
+      const program = new anchor.Program(idlJson as anchor.Idl, provider);
+      
+      // Використовуємо фільтр (якщо ти вже оновив контракт і зробив редеплой)
+      // Якщо ні - поки використовуй старий метод без memcmp або з offset 16
+      const allWorkouts = await program.account.workout.all([
+        {
+          memcmp: {
+            offset: 8, 
+            bytes: walletPubkey.toBase58(),
+          },
+        },
+      ]);
+      
+      // Приводимо до типу явно, бо Anchor повертає any
+      setWorkouts(allWorkouts as unknown as WorkoutAccountResult[]);
+    } catch (err) {
+      console.error("Failed to fetch workouts:", err);
+    } finally {
+      setLoadingWorkouts(false);
+    }
+  }, [provider, walletPubkey]);
+
+  // Завантажуємо при підключенні
+  useEffect(() => {
+    if (provider && walletPubkey) {
+      fetchWorkouts();
+    }
+  }, [provider, walletPubkey, fetchWorkouts]);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <Header
         walletPubkey={walletPubkey}
         onConnectWallet={connectWallet}
@@ -106,23 +147,34 @@ function App() {
             </Card>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="order-2 lg:order-1">
-              <WorkoutList
+          <div className="flex gap-8">
+              {/* Колонка 1: Форма створення (велика) */}
+              
+            <div className="flex w-[50%] gap-y-6 flex-col">
+               <InitializeWorkoutForm
                 provider={provider}
                 idl={idlJson as anchor.Idl}
                 programId={PROGRAM_ID}
                 walletPubkey={walletPubkey}
+                onSuccess={fetchWorkouts} // Оновлюємо список після створення
+              />
+              
+              {/* Список тренувань */}
+              <WorkoutList
+                workouts={workouts} // Передаємо дані пропсом!
+                loading={loadingWorkouts}
+                provider={provider}
+                idl={idlJson as anchor.Idl}
+                walletPubkey={walletPubkey}
+                onUpdate={fetchWorkouts} // Оновлюємо після редагування/видалення
               />
             </div>
 
-            <div className="order-1 lg:order-2">
-              <InitializeWorkoutForm
-                provider={provider}
-                idl={idlJson as anchor.Idl}
-                programId={PROGRAM_ID}
-                walletPubkey={walletPubkey}
-              />
+            {/* Колонка 2: Статистика (бічна панель) */}
+            <div className="w-[40%]">
+               <div className="sticky top-6">
+                  <WorkoutSummary workouts={workouts} />
+               </div>
             </div>
           </div>
         )}

@@ -45,20 +45,23 @@ export default function WorkoutList({
   const [workoutToDelete, setWorkoutToDelete] =
     useState<WorkoutAccountResult | null>(null);
 
-
   const fetchWorkouts = async () => {
     if (!provider || !idl || !walletPubkey) return;
 
     setLoading(true);
     try {
-    const program = new anchor.Program(idl, provider);
+      const program = new anchor.Program(idl, provider);
 
-      const allWorkouts = await program.account.workout.all();
-      setWorkouts(
-        allWorkouts.filter(
-          (w) => w.account.workoutAuthor.toString() === walletPubkey.toString()
-        )
-      );
+      const allWorkouts = await program.account.workout.all([
+        {
+          memcmp: {
+            offset: 8,
+            bytes: walletPubkey.toBase58(),
+          },
+        },
+      ]);
+
+      setWorkouts(allWorkouts)
     } catch (err) {
       console.error("Failed to fetch workouts:", err);
     } finally {
@@ -132,7 +135,6 @@ export default function WorkoutList({
     }
   };
 
-
   return (
     <Card className="h-full">
       <CardHeader>
@@ -165,7 +167,7 @@ export default function WorkoutList({
                 key={idx}
                 className="hover:bg-accent/50 transition-colors cursor-pointer"
               >
-                <CardContent className="p-4 flex flex-col">
+                <CardContent className="flex flex-col">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="font-semibold">{workout.account.name}</h3>
                     <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">

@@ -7,11 +7,12 @@ import {
   initializeWorkoutInstruction,
   updateWorkoutInstruction,
 } from "@/lib/workoutInstructions";
+import idlJson from "./../src/idl/solain";
 
 const PROGRAM_ID = new PublicKey(
   "2BqFVR96CLqZ6AHue5FbUCXFk4zdiASaoL97wND53BT3"
 );
-const WALLET = new PublicKey("9xQeWvG816bUx9EPdQnXyZ3mVzq7DxkqM4kG4R3fSkkh");
+const WALLET = new PublicKey(idlJson.address);
 
 describe("workout instructions helpers", () => {
   it("initializes workout with derived PDAs (happy path)", async () => {
@@ -26,7 +27,7 @@ describe("workout instructions helpers", () => {
       form: {
         name: "Pushups",
         reps: 10,
-        sets: 3,
+        sets: 1,
         duration_sec: 60,
         calories: 100,
         difficulty: 5,
@@ -112,7 +113,7 @@ describe("workout instructions helpers", () => {
         form: {
           name: "Pushups",
           reps: 10,
-          sets: 3,
+          sets: 1,
           duration_sec: 60,
           calories: 100,
           difficulty: 11,

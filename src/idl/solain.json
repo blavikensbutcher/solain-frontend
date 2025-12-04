@@ -1,5 +1,5 @@
 {
-  "address": "2BqFVR96CLqZ6AHue5FbUCXFk4zdiASaoL97wND53BT3",
+  "address": "5HgdreSihoshMKevDgteHRwN1Y1ComnYnbQuZunQRFjB",
   "metadata": {
     "name": "solain",
     "version": "0.1.0",
@@ -422,16 +422,20 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "workout_id",
-            "type": "u64"
-          },
-          {
             "name": "workout_author",
             "type": "pubkey"
           },
           {
+            "name": "workout_id",
+            "type": "u64"
+          },
+          {
             "name": "name",
             "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           },
           {
             "name": "reps",

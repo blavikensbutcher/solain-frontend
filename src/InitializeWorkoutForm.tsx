@@ -93,7 +93,7 @@ export default function InitializeWorkoutForm(props: {
   };
 
   return (
-    <Card className="w-full max-w-2xl">
+    <Card className="w-full ">
       <CardHeader>
         <CardTitle>Create Workout 💪</CardTitle>
         <CardDescription>
