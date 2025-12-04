@@ -29,9 +29,9 @@ describe("workout instructions helpers", () => {
         reps: 10,
         sets: 1,
         duration_sec: 60,
-        calories: 100,
+        calories: 0,
         difficulty: 5,
-        category: "push",
+        category: "STRENGTH",
       },
     });
 
@@ -115,9 +115,9 @@ describe("workout instructions helpers", () => {
           reps: 10,
           sets: 1,
           duration_sec: 60,
-          calories: 100,
+          calories: 0,
           difficulty: 11,
-          category: "push",
+          category: "STRENGTH",
         },
       })
     ).rejects.toThrow("Difficulty must be between");

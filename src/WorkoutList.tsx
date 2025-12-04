@@ -1,15 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import * as anchor from "@coral-xyz/anchor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Dumbbell,
   Clock,
   Flame,
   TrendingUp,
-  Trash2,
-  Edit2,
+  MoreVertical,
+  Pencil,
+  Trash,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { EditWorkoutDialog } from "./components/EditWorkoutDialog";
 import {
@@ -21,6 +30,25 @@ import {
   updateWorkoutInstruction,
   deleteWorkoutInstruction,
 } from "@/lib/workoutInstructions";
+
+const isToday = (date: Date) => {
+  const today = new Date();
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+};
+
+const isYesterday = (date: Date) => {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return (
+    date.getDate() === yesterday.getDate() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getFullYear() === yesterday.getFullYear()
+  );
+};
 
 export default function WorkoutList({
   provider,
@@ -51,8 +79,8 @@ export default function WorkoutList({
     setLoading(true);
     try {
       const program = new anchor.Program(idl, provider);
-
-      const allWorkouts = await program.account.workout.all([
+      
+      const allWorkoutsRaw = await program.account.workout.all([
         {
           memcmp: {
             offset: 8,
@@ -61,7 +89,15 @@ export default function WorkoutList({
         },
       ]);
 
-      setWorkouts(allWorkouts)
+      const allWorkouts = allWorkoutsRaw as unknown as WorkoutAccountResult[];
+
+      setWorkouts(
+        allWorkouts.sort((a, b) => {
+          const tsA = a.account.timestamp ? a.account.timestamp.toNumber() : 0;
+          const tsB = b.account.timestamp ? b.account.timestamp.toNumber() : 0;
+          return tsB - tsA;
+        })
+      );
     } catch (err) {
       console.error("Failed to fetch workouts:", err);
     } finally {
@@ -73,6 +109,42 @@ export default function WorkoutList({
     fetchWorkouts();
   }, [provider, walletPubkey]);
 
+  const groupedWorkouts = useMemo(() => {
+    const groups: Record<string, WorkoutAccountResult[]> = {};
+    const order: string[] = [];
+
+    workouts.forEach((workout) => {
+      const ts = workout.account.timestamp 
+        ? workout.account.timestamp.toNumber() * 1000 
+        : Date.now();
+      
+      const date = new Date(ts);
+      
+      let groupTitle = date.toLocaleDateString("uk-UA", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      if (isToday(date)) {
+        groupTitle = "Today";
+      } else if (isYesterday(date)) {
+        groupTitle = "Yesterday";
+      }
+
+      if (!groups[groupTitle]) {
+        groups[groupTitle] = [];
+        order.push(groupTitle);
+      }
+      groups[groupTitle].push(workout);
+    });
+
+    return order.map((title) => ({
+      title,
+      items: groups[title],
+    }));
+  }, [workouts]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((f) => ({
@@ -81,7 +153,7 @@ export default function WorkoutList({
     }));
   };
 
-  const openEditDialog = (workout: any) => {
+  const openEditDialog = (workout: WorkoutAccountResult) => {
     setEditingWorkout(workout);
     setForm({
       name: workout.account.name,
@@ -118,7 +190,6 @@ export default function WorkoutList({
 
   const deleteWorkout = async () => {
     if (!provider || !idl || !walletPubkey || !workoutToDelete) return;
-
     try {
       const program = new anchor.Program(idl, provider);
       await deleteWorkoutInstruction({
@@ -135,117 +206,205 @@ export default function WorkoutList({
     }
   };
 
+  const getCategoryStyle = (category: string) => {
+    const styles: Record<string, string> = {
+      STRENGTH:
+        "bg-blue-500/20 border-blue-500/30 text-blue-700 dark:text-blue-400",
+      CARDIO: "bg-red-500/20 border-red-500/30 text-red-700 dark:text-red-400",
+      ENDURANCE:
+        "bg-orange-500/20 border-orange-500/30 text-orange-700 dark:text-orange-400",
+      HIIT: "bg-pink-500/20 border-pink-500/30 text-pink-700 dark:text-pink-400",
+      FUNCTIONAL:
+        "bg-green-500/20 border-green-500/30 text-green-700 dark:text-green-400",
+    };
+    return (
+      styles[category.toUpperCase()] ||
+      "bg-gray-500/20 border-gray-500/30 text-gray-700 dark:text-gray-400"
+    );
+  };
+
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Your Workouts</CardTitle>
-          <Button variant="outline" size="sm" onClick={fetchWorkouts}>
+    <Card className="border-none shadow-none bg-transparent h-full flex flex-col">
+      <CardHeader className="px-0 pt-0 shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <CardTitle className="text-xl">Your Workouts</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchWorkouts}
+            className="h-8"
+          >
             Refresh
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <p className="text-muted-foreground">Loading workouts...</p>
-          </div>
-        ) : workouts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
-            <div className="rounded-full bg-muted p-4">
-              <Dumbbell className="h-8 w-8 text-muted-foreground" />
+      
+      <div className="px-0 overflow-y-auto max-h-[60vh] pr-2 custom-scrollbar">
+        <CardContent className="px-0 space-y-6">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <p className="text-sm text-muted-foreground">Fetching data...</p>
             </div>
-            <p className="font-medium">No workouts found</p>
-            <p className="text-sm text-muted-foreground">
-              Create your first workout!
+          ) : workouts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-4 text-center border border-dashed rounded-xl bg-background/50">
+              <div className="rounded-full bg-muted p-4">
+                <Dumbbell className="h-8 w-8 text-muted-foreground/50" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-medium">No workouts found</p>
+                <p className="text-sm text-muted-foreground">
+                  Create your first workout to get started
+                </p>
+              </div>
+            </div>
+          ) : (
+            groupedWorkouts.map((group, groupIdx) => (
+              <div key={groupIdx} className="space-y-3">
+                <div className="flex items-center gap-4 pt-2 sticky top-0 bg-background/95 backdrop-blur z-10 py-2">
+                  <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                    {group.title}
+                  </h4>
+                  <Separator className="flex-1" />
+                </div>
+
+                <div className="space-y-3">
+                  {group.items.map((workout, idx) => (
+                    <div
+                      key={idx}
+                      className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border bg-card text-card-foreground shadow-sm hover:shadow-md transition-all duration-200"
+                    >
+                      <div className="flex-1 space-y-3 sm:space-y-1">
+                        <div className="flex items-start justify-between">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                            <h3 className="font-semibold text-base sm:text-lg leading-none tracking-tight">
+                              {workout.account.name}
+                            </h3>
+                            <Badge
+                              variant="outline"
+                              className={`w-fit text-[10px] sm:text-xs px-2 py-0.5 border ${getCategoryStyle(
+                                workout.account.category
+                              )}`}
+                            >
+                              {workout.account.category}
+                            </Badge>
+                          </div>
+
+                          <div className="sm:hidden">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 -mr-2"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => openEditDialog(workout)}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => {
+                                    setWorkoutToDelete(workout);
+                                    setShowDeleteConfirm(true);
+                                  }}
+                                >
+                                  <Trash className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground pt-1 sm:pt-2">
+                          <div className="flex items-center gap-1.5 min-w-[80px]">
+                            <Dumbbell className="h-3.5 w-3.5 text-primary/70" />
+                            <span>
+                              <span className="font-medium text-foreground">
+                                {workout.account.sets}
+                              </span>{" "}
+                              sets ×{" "}
+                              <span className="font-medium text-foreground">
+                                {workout.account.reps}
+                              </span>
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 min-w-[80px]">
+                            <Clock className="h-3.5 w-3.5 text-primary/70" />
+                            <span>{workout.account.durationSec}s</span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 min-w-[80px]">
+                            <Flame className="h-3.5 w-3.5 text-primary/70" />
+                            <span>{workout.account.calories} kcal</span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 min-w-[80px]">
+                            <TrendingUp className="h-3.5 w-3.5 text-primary/70" />
+                            <span>Lvl {workout.account.difficulty}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="hidden sm:flex items-center gap-2 ml-4">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          onClick={() => openEditDialog(workout)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => {
+                            setWorkoutToDelete(workout);
+                            setShowDeleteConfirm(true);
+                          }}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+
+          <EditWorkoutDialog
+            open={!!editingWorkout}
+            onOpenChange={(open) => !open && closeEditDialog()}
+            form={form}
+            onChange={handleInputChange}
+            onSave={updateWorkout}
+            onCancel={closeEditDialog}
+          />
+
+          <ConfirmDialog
+            open={showDeleteConfirm}
+            onOpenChange={setShowDeleteConfirm}
+            title="Confirm Deletion"
+            description="This action cannot be undone."
+            onConfirm={deleteWorkout}
+            confirmText="Delete"
+            cancelText="Cancel"
+          >
+            <p>
+              Are you sure you want to delete the workout "
+              {workoutToDelete?.account.name}"?
             </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {workouts.map((workout, idx) => (
-              <Card
-                key={idx}
-                className="hover:bg-accent/50 transition-colors cursor-pointer"
-              >
-                <CardContent className="flex flex-col">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold">{workout.account.name}</h3>
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                      {workout.account.category}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Dumbbell className="h-3 w-3" />
-                      <span>
-                        {workout.account.sets} × {workout.account.reps}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{workout.account.durationSec}s</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Flame className="h-3 w-3" />
-                      <span>{workout.account.calories} cal</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3" />
-                      <span>Lvl {workout.account.difficulty}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1"
-                      onClick={() => openEditDialog(workout)}
-                    >
-                      <Edit2 className="h-4 w-4" /> Edit
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="flex items-center gap-1"
-                      onClick={() => {
-                        setWorkoutToDelete(workout);
-                        setShowDeleteConfirm(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" /> Delete
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        <EditWorkoutDialog
-          open={!!editingWorkout}
-          onOpenChange={(open) => !open && closeEditDialog()}
-          form={form}
-          onChange={handleInputChange}
-          onSave={updateWorkout}
-          onCancel={closeEditDialog}
-        />
-
-        <ConfirmDialog
-          open={showDeleteConfirm}
-          onOpenChange={setShowDeleteConfirm}
-          title="Confirm Deletion"
-          description="This action cannot be undone."
-          onConfirm={deleteWorkout}
-          confirmText="Delete"
-          cancelText="Cancel"
-        >
-          <p>
-            Are you sure you want to delete the workout "
-            {workoutToDelete?.account.name}"?
-          </p>
-        </ConfirmDialog>
-      </CardContent>
+          </ConfirmDialog>
+        </CardContent>
+      </div>
     </Card>
   );
 }

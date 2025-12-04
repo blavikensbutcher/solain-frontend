@@ -4,8 +4,8 @@ import * as anchor from "@coral-xyz/anchor";
 export interface WorkoutListProps {
   provider: anchor.AnchorProvider | null;
   idl: anchor.Idl | null;
-  programId: string;
-  walletPubkey: PublicKey | null;
+
+  walletPubkey: PublicKey | null; 
 }
 
 export interface WorkoutFormState {
@@ -20,27 +20,28 @@ export interface WorkoutFormState {
 
 export interface ProgramConfig {
   admin: PublicKey;
-  next_workout_id: bigint; // u64
-  total_workouts: bigint; // u64
+  nextWorkoutId: anchor.BN; // u64 -> BN 
+  totalWorkouts: anchor.BN; // u64 -> BN
   paused: boolean;
-  bump: number; // u8
-}
-
-export interface Workout {
-  workout_id: bigint;
-  workout_author: PublicKey;
-  name: string;
-  reps: number;       // u16
-  sets: number;       // u8
-  duration_sec: number; // u32
-  calories: number;   // u16
-  difficulty: number; // u8
-  category: string;
   bump: number;
 }
 
 
+export interface WorkoutAccount {
+  workoutId: anchor.BN;      // u64 -> BN
+  workoutAuthor: PublicKey;
+  name: string;
+  timestamp: anchor.BN;      // i64 -> BN 
+  reps: number;              // u16
+  sets: number;              // u8
+  durationSec: number;       // u32 -> duration_sec стає durationSec
+  calories: number;          // u16
+  difficulty: number;        // u8
+  category: string;
+  bump: number;
+}
+
 export interface WorkoutAccountResult {
   publicKey: PublicKey;
-  account: Workout;
+  account: WorkoutAccount;
 }

@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dumbbell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WorkoutList from "./WorkoutList";
-import { WorkoutAccountResult } from "./types/workout.types"; // Імпорт типу
+import { WorkoutAccountResult } from "./types/workout.types";
 import { WorkoutSummary } from "./WorkoutSummary";
 
 const PROGRAM_ID = idlJson.address;
@@ -55,7 +55,7 @@ function App() {
       }
       setWalletPubkey(null);
       setProvider(null);
-      setWorkouts([]); // Очищаємо дані при виході
+      setWorkouts([]);
     } catch (err) {
       console.error(err);
     }
@@ -67,7 +67,6 @@ function App() {
     }
   }, []);
 
-  // Функція завантаження даних (тепер вона тут)
   const fetchWorkouts = useCallback(async () => {
     if (!provider || !walletPubkey) return;
 
@@ -75,8 +74,6 @@ function App() {
     try {
       const program = new anchor.Program(idlJson as anchor.Idl, provider);
       
-      // Використовуємо фільтр (якщо ти вже оновив контракт і зробив редеплой)
-      // Якщо ні - поки використовуй старий метод без memcmp або з offset 16
       const allWorkouts = await program.account.workout.all([
         {
           memcmp: {
@@ -86,7 +83,6 @@ function App() {
         },
       ]);
       
-      // Приводимо до типу явно, бо Anchor повертає any
       setWorkouts(allWorkouts as unknown as WorkoutAccountResult[]);
     } catch (err) {
       console.error("Failed to fetch workouts:", err);
@@ -95,7 +91,6 @@ function App() {
     }
   }, [provider, walletPubkey]);
 
-  // Завантажуємо при підключенні
   useEffect(() => {
     if (provider && walletPubkey) {
       fetchWorkouts();
@@ -147,31 +142,27 @@ function App() {
             </Card>
           </div>
         ) : (
-          <div className="flex gap-8">
-              {/* Колонка 1: Форма створення (велика) */}
-              
-            <div className="flex w-[50%] gap-y-6 flex-col">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+            <div className="w-full lg:w-[60%] flex flex-col gap-6">
                <InitializeWorkoutForm
                 provider={provider}
                 idl={idlJson as anchor.Idl}
                 programId={PROGRAM_ID}
                 walletPubkey={walletPubkey}
-                onSuccess={fetchWorkouts} // Оновлюємо список після створення
+                onSuccess={fetchWorkouts}
               />
               
-              {/* Список тренувань */}
               <WorkoutList
-                workouts={workouts} // Передаємо дані пропсом!
+                workouts={workouts}
                 loading={loadingWorkouts}
                 provider={provider}
                 idl={idlJson as anchor.Idl}
                 walletPubkey={walletPubkey}
-                onUpdate={fetchWorkouts} // Оновлюємо після редагування/видалення
+                onUpdate={fetchWorkouts}
               />
             </div>
 
-            {/* Колонка 2: Статистика (бічна панель) */}
-            <div className="w-[40%]">
+            <div className="w-full lg:w-[40%]">
                <div className="sticky top-6">
                   <WorkoutSummary workouts={workouts} />
                </div>

@@ -14,8 +14,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { initializeWorkoutInstruction } from "@/lib/workoutInstructions";
-
 
 if (typeof window !== "undefined") {
   window.Buffer = Buffer;
@@ -26,10 +32,12 @@ export default function InitializeWorkoutForm(props: {
   idl: any | null;
   programId: string;
   walletPubkey: PublicKey | null;
+  onSuccess?: () => void;
 }) {
-  const { provider, idl, walletPubkey } = props;
+  const { provider, idl, walletPubkey, onSuccess } = props;
   const [status, setStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [category, setCategory] = useState<string>("STRENGTH");
 
   const callInitializeWorkout = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +59,6 @@ export default function InitializeWorkoutForm(props: {
     const difficulty = Number(
       (form.elements.namedItem("difficulty") as any).value || 1
     );
-    const category = (form.elements.namedItem("category") as any).value || "general";
 
     try {
       if (!idl) {
@@ -83,7 +90,14 @@ export default function InitializeWorkoutForm(props: {
           8
         )}...`
       );
+      
       form.reset();
+      setCategory("STRENGTH");
+
+      if (onSuccess) {
+        onSuccess();
+      }
+
     } catch (err: any) {
       console.error("Full error:", err);
       setStatus("Error: " + (err?.message || err?.toString?.()));
@@ -93,7 +107,7 @@ export default function InitializeWorkoutForm(props: {
   };
 
   return (
-    <Card className="w-full ">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Create Workout 💪</CardTitle>
         <CardDescription>
@@ -113,7 +127,7 @@ export default function InitializeWorkoutForm(props: {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="reps">Reps</Label>
               <Input
@@ -130,13 +144,13 @@ export default function InitializeWorkoutForm(props: {
                 id="sets"
                 name="sets"
                 type="number"
-                defaultValue={3}
+                defaultValue={1}
                 required
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="duration_sec">Duration (seconds)</Label>
               <Input
@@ -153,13 +167,13 @@ export default function InitializeWorkoutForm(props: {
                 id="calories"
                 name="calories"
                 type="number"
-                defaultValue={100}
+                defaultValue={0}
                 required
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="difficulty">Difficulty (1-10)</Label>
               <Input
@@ -174,17 +188,25 @@ export default function InitializeWorkoutForm(props: {
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
-                name="category"
-                defaultValue="push"
-                placeholder="e.g., push, pull, legs"
-                required
-              />
+              <Select 
+                value={category} 
+                onValueChange={setCategory}
+              >
+                <SelectTrigger id="category" className="bg-background  w-full">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent position="popper" className="bg-background z-50">
+                  <SelectItem value="STRENGTH">Strength</SelectItem>
+                  <SelectItem value="CARDIO">Cardio</SelectItem>
+                  <SelectItem value="ENDURANCE">Endurance</SelectItem>
+                  <SelectItem value="HIIT">HIIT</SelectItem>
+                  <SelectItem value="FUNCTIONAL">Functional</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full mt-6" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isLoading ? "Creating..." : "Create Workout"}
           </Button>
