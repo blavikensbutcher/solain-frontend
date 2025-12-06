@@ -3,7 +3,7 @@ import { Dumbbell, LogOut, Wallet, Globe, Coins } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import * as anchor from "@coral-xyz/anchor";
-import { PublicKey, Connection } from "@solana/web3.js";
+import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 interface HeaderProps {
   walletPubkey: PublicKey | null;
@@ -23,6 +23,7 @@ export default function Header({
   const [language, setLanguage] = useState(i18n.language);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [isAirdropping, setIsAirdropping] = useState(false);
+  const [balance, setBalance] = useState<number | null>(null);
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem("language");
@@ -34,6 +35,24 @@ export default function Header({
     }
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (walletPubkey && provider) {
+      fetchBalance();
+      const interval = setInterval(fetchBalance, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [walletPubkey, provider]);
+
+  const fetchBalance = async () => {
+    if (!walletPubkey || !provider) return;
+    try {
+      const bal = await provider.connection.getBalance(walletPubkey);
+      setBalance(bal / LAMPORTS_PER_SOL);
+    } catch (err) {
+      console.error("Failed to fetch balance:", err);
+    }
+  };
 
   const handleLanguageChange = async (lng: string) => {
     await i18n.changeLanguage(lng);
@@ -49,9 +68,10 @@ export default function Header({
     try {
       const signature = await provider.connection.requestAirdrop(
         walletPubkey,
-        1 * anchor.web3.LAMPORTS_PER_SOL
+        1 * LAMPORTS_PER_SOL
       );
       await provider.connection.confirmTransaction(signature);
+      await fetchBalance();
       alert(t("Airdrop successful! +1 SOL"));
     } catch (err) {
       console.error(err);
@@ -112,7 +132,9 @@ export default function Header({
             </div>
           )}
 
-          {walletPubkey && (
+         
+
+          {walletPubkey && balance && balance < 5 && (
             <Button
               onClick={requestAirdrop}
               variant="outline"
@@ -122,8 +144,17 @@ export default function Header({
             >
               <Coins className="h-4 w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">{t("Get 1 SOL")}</span>
-              <span className="sm:hidden">SOL</span>
+              <span className="sm:hidden">+1</span>
             </Button>
+          )}
+
+           {walletPubkey && balance !== null && (
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20">
+              <Coins className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-primary">
+                Your balance: {balance.toFixed(3)} SOL
+              </span>
+            </div>
           )}
 
           {walletPubkey ? (
