@@ -25,7 +25,7 @@ function App() {
   const { t } = useTranslation();
   const [provider, setProvider] = useState<anchor.AnchorProvider | null>(null);
   const [walletPubkey, setWalletPubkey] = useState<PublicKey | null>(null);
-  
+
   const [workouts, setWorkouts] = useState<WorkoutAccountResult[]>([]);
   const [loadingWorkouts, setLoadingWorkouts] = useState(false);
 
@@ -75,16 +75,16 @@ function App() {
     setLoadingWorkouts(true);
     try {
       const program = new anchor.Program(idlJson as anchor.Idl, provider);
-      
+
       const allWorkouts = await program.account.workout.all([
         {
           memcmp: {
-            offset: 16, 
+            offset: 16,
             bytes: walletPubkey.toBase58(),
           },
         },
       ]);
-      
+
       setWorkouts(allWorkouts as unknown as WorkoutAccountResult[]);
     } catch (err) {
       console.error("Failed to fetch workouts:", err);
@@ -105,6 +105,7 @@ function App() {
         walletPubkey={walletPubkey}
         onConnectWallet={connectWallet}
         onDisconnectWallet={disconnectWallet}
+        provider={provider}
       />
 
       <main className="container mx-auto py-8 px-4">
@@ -120,7 +121,9 @@ function App() {
                     {t("Welcome to Solain 👋")}
                   </h2>
                   <p className="text-muted-foreground">
-                    {t("Connect your wallet to start tracking your workouts on-chain")}
+                    {t(
+                      "Connect your wallet to start tracking your workouts on-chain"
+                    )}
                   </p>
                 </div>
                 {!walletPubkey && isMobile() ? (
@@ -136,7 +139,7 @@ function App() {
                     {t("Open in Phantom App")}
                   </Button>
                 ) : (
-                    <Button onClick={connectWallet}>
+                  <Button onClick={connectWallet}>
                     {t("Connect Phantom Wallet")}
                   </Button>
                 )}
@@ -146,14 +149,14 @@ function App() {
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
             <div className="w-full lg:w-[60%] flex flex-col gap-6">
-               <InitializeWorkoutForm
+              <InitializeWorkoutForm
                 provider={provider}
                 idl={idlJson as anchor.Idl}
                 programId={PROGRAM_ID}
                 walletPubkey={walletPubkey}
                 onSuccess={fetchWorkouts}
               />
-              
+
               <WorkoutList
                 workouts={workouts}
                 loading={loadingWorkouts}
@@ -165,9 +168,9 @@ function App() {
             </div>
 
             <div className="w-full lg:w-[40%]">
-               <div className="sticky top-6">
-                  <WorkoutSummary workouts={workouts} />
-               </div>
+              <div className="sticky top-6">
+                <WorkoutSummary workouts={workouts} />
+              </div>
             </div>
           </div>
         )}

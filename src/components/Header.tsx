@@ -1,23 +1,28 @@
 import { Button } from "@/components/ui/button";
-import { Dumbbell, LogOut, Wallet, Globe } from "lucide-react";
+import { Dumbbell, LogOut, Wallet, Globe, Coins } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
+import * as anchor from "@coral-xyz/anchor";
+import { PublicKey, Connection } from "@solana/web3.js";
 
 interface HeaderProps {
-  walletPubkey: any | null;
+  walletPubkey: PublicKey | null;
   onConnectWallet: () => void;
   onDisconnectWallet: () => void;
+  provider: anchor.AnchorProvider | null;
 }
 
 export default function Header({
   walletPubkey,
   onConnectWallet,
   onDisconnectWallet,
+  provider,
 }: HeaderProps) {
   const { t, i18n } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [language, setLanguage] = useState(i18n.language);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [isAirdropping, setIsAirdropping] = useState(false);
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem("language");
@@ -36,10 +41,29 @@ export default function Header({
     localStorage.setItem("language", lng);
     setShowLangMenu(false);
   };
+
+  const requestAirdrop = async () => {
+    if (!walletPubkey || !provider) return;
+    
+    setIsAirdropping(true);
+    try {
+      const signature = await provider.connection.requestAirdrop(
+        walletPubkey,
+        1 * anchor.web3.LAMPORTS_PER_SOL
+      );
+      await provider.connection.confirmTransaction(signature);
+      alert(t("Airdrop successful! +1 SOL"));
+    } catch (err) {
+      console.error(err);
+      alert(t("Airdrop failed. Rate limit reached or network error."));
+    } finally {
+      setIsAirdropping(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* Логотип та назва */}
         <div className="flex items-center gap-2">
           <div className="rounded-full bg-primary/10 p-1.5 sm:p-2">
             <Dumbbell className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
@@ -52,9 +76,7 @@ export default function Header({
           </h1>
         </div>
 
-        {/* Секція гаманця та мови */}
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Перемикач мови */}
           {mounted && (
             <div className="relative">
               <Button
@@ -90,9 +112,22 @@ export default function Header({
             </div>
           )}
 
+          {walletPubkey && (
+            <Button
+              onClick={requestAirdrop}
+              variant="outline"
+              size="sm"
+              disabled={isAirdropping}
+              className="h-8"
+            >
+              <Coins className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">{t("Get 1 SOL")}</span>
+              <span className="sm:hidden">SOL</span>
+            </Button>
+          )}
+
           {walletPubkey ? (
             <div className="flex items-center gap-2 sm:gap-3 bg-muted/50 py-1 px-2 rounded-full border sm:border-none sm:bg-transparent sm:p-0">
-              {/* Іконка гаманця для мобілки */}
               <Wallet className="w-3 h-3 sm:hidden text-muted-foreground" />
               
               <span className="text-xs sm:text-sm text-muted-foreground font-mono font-medium">
@@ -100,7 +135,7 @@ export default function Header({
                 {walletPubkey.toString().slice(-4)}
               </span>
 
-                <Button 
+              <Button 
                 variant="ghost" 
                 size="icon" 
                 className="h-8 w-8 sm:hidden text-destructive hover:text-destructive/90 hover:bg-destructive/10"
