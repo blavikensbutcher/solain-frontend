@@ -9,17 +9,10 @@ import {
   Clock,
   Flame,
   TrendingUp,
-  MoreVertical,
   Pencil,
   Trash,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "./components/ConfirmDialog";
 import { EditWorkoutDialog } from "./components/EditWorkoutDialog";
 import {
@@ -111,7 +104,7 @@ export default function WorkoutList({
       title,
       items: groups[title],
     }));
-  }, [workouts]);
+  }, [workouts, t]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -247,7 +240,7 @@ export default function WorkoutList({
                     >
                       <div className="flex-1 space-y-3 sm:space-y-1">
                         <div className="flex items-start justify-between">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1">
                             <h3 className="font-semibold text-base sm:text-lg leading-none tracking-tight">
                               {workout.account.name}
                             </h3>
@@ -259,43 +252,32 @@ export default function WorkoutList({
                             >
                               {t(
                                 workout.account.category.charAt(0) +
-                                  workout.account.category
-                                    .slice(1)
-                                    .toLowerCase()
+                                  workout.account.category.slice(1).toLowerCase()
                               )}
                             </Badge>
                           </div>
 
-                          <div className="sm:hidden">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 -mr-2"
-                                >
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => openEditDialog(workout)}
-                                >
-                                  <Pencil className="mr-2 h-4 w-4" />{" "}
-                                  {t("Edit")}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-destructive focus:text-destructive"
-                                  onClick={() => {
-                                    setWorkoutToDelete(workout);
-                                    setShowDeleteConfirm(true);
-                                  }}
-                                >
-                                  <Trash className="mr-2 h-4 w-4" />{" "}
-                                  {t("Delete")}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                          {/* МОБІЛЬНІ КНОПКИ - ПРОСТІ ТА НАДІЙНІ */}
+                          <div className="sm:hidden flex gap-1 pt-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                              onClick={() => openEditDialog(workout)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => {
+                                setWorkoutToDelete(workout);
+                                setShowDeleteConfirm(true);
+                              }}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
 
@@ -348,6 +330,7 @@ export default function WorkoutList({
                         </div>
                       </div>
 
+                      {/* ДЕСКТОПНІ КНОПКИ */}
                       <div className="hidden sm:flex items-center gap-2 ml-4">
                         <Button
                           variant="ghost"

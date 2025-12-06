@@ -189,8 +189,7 @@ export default function Header({
               onClick={onConnectWallet}
               className="text-xs sm:text-sm px-3 sm:px-4"
             >
-              {t("Connect")}{" "}
-              <span className="hidden sm:inline ml-1">{t("Wallet")}</span>
+              {t("Connect")} {t("Wallet")}
             </Button>
           )}
         </div>
