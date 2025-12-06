@@ -27,6 +27,7 @@
   "Last:": "Останнє:",
   "Total:": "Усього:",
   "Lvl": "Рівень",
+  "Sets:": "Підходи:",
   "Welcome to Solain 👋": "Ласкаво просимо до Solain 👋",
   "Connect your wallet to start tracking your workouts on-chain": "Підключіть гаманець, щоб почати відстежувати тренування в мережі",
   "Open in Phantom App": "Відкрити в Phantom App",
@@ -56,5 +57,8 @@
   "Connect Wallet": "Підключити гаманець",
   "Language": "Мова",
   "English": "Англійська",
-  "Ukrainian": "Українська"
+  "Ukrainian": "Українська",
+  "HH:mm": "HH:mm",
+  "MMMM d, yyyy": "d MMMM yyyy р.",
+  "MMM d, yyyy": "d MMM yyyy р."
 }

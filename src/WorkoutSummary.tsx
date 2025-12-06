@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Activity, CalendarDays, Dumbbell, Clock, Flame, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
+import { enUS, uk } from "date-fns/locale";
 import { WorkoutAccountResult } from "./types/workout.types";
 import {
   Dialog,
@@ -28,7 +29,7 @@ type ExerciseSummary = {
 };
 
 export function WorkoutSummary({ workouts }: WorkoutSummaryProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
 
   const getSummary = (): ExerciseSummary[] => {
@@ -142,7 +143,7 @@ export function WorkoutSummary({ workouts }: WorkoutSummaryProps) {
                   {showDateSeparator && (
                     <div className="flex items-center gap-4 py-2">
                       <h4 className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                        {format(currentDate, "MMMM d, yyyy")}
+                        {format(currentDate, i18n.language === "uk" ? "d MMMM yyyy 'р.'" : "MMM d, yyyy", { locale: i18n.language === "uk" ? uk : enUS })}
                       </h4>
                       <Separator className="flex-1" />
                     </div>
@@ -154,7 +155,7 @@ export function WorkoutSummary({ workouts }: WorkoutSummaryProps) {
                         {format(currentDate, "HH:mm")}
                       </span>
                       <span className="text-xs text-muted-foreground">
-                        {format(currentDate, "MMM d, yyyy")}
+                        {format(currentDate, i18n.language === "uk" ? "d MMMM yyyy 'р.'" : "MMM d, yyyy", { locale: i18n.language === "uk" ? uk : enUS })}
                       </span>
                     </div>
 
@@ -162,7 +163,7 @@ export function WorkoutSummary({ workouts }: WorkoutSummaryProps) {
                       <div className="flex items-center gap-2">
                         <Dumbbell className="h-4 w-4 text-primary/70" />
                         <span>
-                          {t("Sets")}: <span className="font-medium">{workout.account.sets}</span> × <span className="font-medium">{workout.account.reps}</span>
+                          {i18n.language === "uk" ? "Підходи:" : "Sets:"} <span className="font-medium">{workout.account.sets}</span> × <span className="font-medium">{workout.account.reps}</span>
                         </span>
                       </div>
 

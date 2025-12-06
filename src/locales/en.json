@@ -27,6 +27,7 @@
   "Last:": "Last:",
   "Total:": "Total:",
   "Lvl": "Lvl",
+  "Sets:": "Sets:",
   "Welcome to Solain 👋": "Welcome to Solain 👋",
   "Connect your wallet to start tracking your workouts on-chain": "Connect your wallet to start tracking your workouts on-chain",
   "Open in Phantom App": "Open in Phantom App",
@@ -56,5 +57,8 @@
   "Connect Wallet": "Connect Wallet",
   "Language": "Language",
   "English": "English",
-  "Ukrainian": "Ukrainian"
+  "Ukrainian": "Ukrainian",
+  "HH:mm": "HH:mm",
+  "MMMM d, yyyy": "MMMM d, yyyy",
+  "MMM d, yyyy": "MMM d, yyyy"
 }
