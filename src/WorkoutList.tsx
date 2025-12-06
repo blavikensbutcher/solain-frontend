@@ -70,6 +70,7 @@ export default function WorkoutList({
     calories: 0,
     difficulty: 1,
     category: "",
+    weight_lifted: undefined,
   });
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -81,12 +82,12 @@ export default function WorkoutList({
     const order: string[] = [];
 
     workouts.forEach((workout) => {
-      const ts = workout.account.timestamp 
-        ? workout.account.timestamp.toNumber() * 1000 
+      const ts = workout.account.timestamp
+        ? workout.account.timestamp.toNumber() * 1000
         : Date.now();
-      
+
       const date = new Date(ts);
-      
+
       let groupTitle = date.toLocaleDateString("uk-UA", {
         day: "numeric",
         month: "long",
@@ -130,6 +131,7 @@ export default function WorkoutList({
       calories: workout.account.calories,
       difficulty: workout.account.difficulty,
       category: workout.account.category,
+      weight_lifted: workout.account.weightLifted || undefined,
     });
   };
 
@@ -205,13 +207,15 @@ export default function WorkoutList({
           </Button>
         </div>
       </CardHeader>
-      
+
       <div className="px-0 overflow-y-auto max-h-[60vh] pr-2 custom-scrollbar">
         <CardContent className="px-0 space-y-6">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <p className="text-sm text-muted-foreground">{t("Fetching data...")}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("Fetching data...")}
+              </p>
             </div>
           ) : workouts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4 text-center border border-dashed rounded-xl bg-background/50">
@@ -255,7 +259,9 @@ export default function WorkoutList({
                             >
                               {t(
                                 workout.account.category.charAt(0) +
-                                  workout.account.category.slice(1).toLowerCase()
+                                  workout.account.category
+                                    .slice(1)
+                                    .toLowerCase()
                               )}
                             </Badge>
                           </div>
@@ -275,7 +281,8 @@ export default function WorkoutList({
                                 <DropdownMenuItem
                                   onClick={() => openEditDialog(workout)}
                                 >
-                                  <Pencil className="mr-2 h-4 w-4" /> {t("Edit")}
+                                  <Pencil className="mr-2 h-4 w-4" />{" "}
+                                  {t("Edit")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
@@ -284,7 +291,8 @@ export default function WorkoutList({
                                     setShowDeleteConfirm(true);
                                   }}
                                 >
-                                  <Trash className="mr-2 h-4 w-4" /> {t("Delete")}
+                                  <Trash className="mr-2 h-4 w-4" />{" "}
+                                  {t("Delete")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -312,14 +320,31 @@ export default function WorkoutList({
                           </div>
 
                           <div className="flex items-center gap-1.5 min-w-[80px]">
-                            <Flame className="h-3.5 w-3.5 text-primary/70" />
-                            <span>{workout.account.calories} ккал</span>
+                            <TrendingUp className="h-3.5 w-3.5 text-primary/70" />
+                            <span>
+                              {t("Lvl")} {workout.account.difficulty}
+                            </span>
                           </div>
 
                           <div className="flex items-center gap-1.5 min-w-[80px]">
-                            <TrendingUp className="h-3.5 w-3.5 text-primary/70" />
-                            <span>{t("Lvl")} {workout.account.difficulty}</span>
+                            <Flame className="h-3.5 w-3.5 text-primary/70" />
+                            <span>
+                              {workout.account.calories} {t("kcal")}
+                            </span>
                           </div>
+
+                          {workout.account.weightLifted !== null &&
+                            workout.account.weightLifted !== undefined && (
+                              <div className="flex items-center gap-1.5 min-w-[80px]">
+                                <Dumbbell className="h-3.5 w-3.5 text-primary/70 rotate-90" />
+                                <span>
+                                  {t("Weight")}:{" "}
+                                  <span className="font-medium text-foreground">
+                                    {workout.account.weightLifted} {t("kg")}
+                                  </span>
+                                </span>
+                              </div>
+                            )}
                         </div>
                       </div>
 

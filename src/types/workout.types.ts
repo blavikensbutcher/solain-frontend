@@ -19,6 +19,7 @@ export interface WorkoutFormState {
   calories: number;
   difficulty: number;
   category: string;
+  weight_lifted?: number;
 }
 
 export interface ProgramConfig {
@@ -41,6 +42,7 @@ export interface WorkoutAccount {
   calories: number;          // u16
   difficulty: number;        // u8
   category: string;
+  weightLifted: number;
   bump: number;
 }
 

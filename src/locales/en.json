@@ -4,6 +4,7 @@
   "Workout Name": "Workout Name",
   "Push-ups": "Push-ups",
   "e.g., Push-ups": "e.g., Push-ups",
+  "e.g., 60": "e.g., 60",
   "Reps": "Reps",
   "Sets": "Sets",
   "Duration (seconds)": "Duration (seconds)",
@@ -58,7 +59,12 @@
   "Language": "Language",
   "English": "English",
   "Ukrainian": "Ukrainian",
+  "Weight (kg)": "Weight (kg)",
+  "Weight:": "Weight:",
+  "Weight": "Weight",
   "HH:mm": "HH:mm",
   "MMMM d, yyyy": "MMMM d, yyyy",
-  "MMM d, yyyy": "MMM d, yyyy"
+  "MMM d, yyyy": "MMM d, yyyy",
+   "kg": "kg",
+  "kcal": "kcal"
 }

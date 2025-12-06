@@ -20,6 +20,7 @@ export interface InitializeWorkoutPayload {
   calories: number;
   difficulty: number;
   category: string;
+  weight_lifted?: number;
 }
 
 export type UpdateWorkoutPayload = Partial<InitializeWorkoutPayload>;
@@ -73,7 +74,7 @@ export async function initializeWorkoutInstruction({
   const nextWorkoutId = normalizeNumber(configAccount.nextWorkoutId);
   const workoutIdBn = numberLikeToBn(nextWorkoutId);
   const workoutPda = getWorkoutPda(program.programId, walletPubkey, workoutIdBn);
-  
+
   const userProfilePda = getUserProfilePda(program.programId, walletPubkey);
   await ensureUserProfileInitialized(program, walletPubkey, userProfilePda);
 
@@ -87,7 +88,7 @@ export async function initializeWorkoutInstruction({
       form.calories,
       form.difficulty,
       form.category,
-      null
+      form.weight_lifted !== undefined ? form.weight_lifted : null,
     )
     .accounts({
       config: configPda,

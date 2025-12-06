@@ -82,6 +82,13 @@ export function EditWorkoutDialog({
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="weight_lifted">{t("Weight (kg)")}</Label>
+              <Input type="number" id="weight_lifted" name="weight_lifted" value={form.weight_lifted || 0} onChange={onChange} min={0} step={0.5} />
+            </div>
+          </div>
+
           <div className="mt-6 flex justify-end gap-4">
             <Button type="button" variant="outline" onClick={onCancel}>
               {t("Cancel")}

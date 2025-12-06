@@ -4,6 +4,7 @@
   "Workout Name": "Назва тренування",
   "Push-ups": "Віджимання",
   "e.g., Push-ups": "наприклад, Віджимання",
+  "e.g., 60": "наприклад, 60",
   "Reps": "Повторення",
   "Sets": "Підходи",
   "Duration (seconds)": "Тривалість (сек)",
@@ -58,7 +59,12 @@
   "Language": "Мова",
   "English": "Англійська",
   "Ukrainian": "Українська",
+  "Weight (kg)": "Вага (кг)",
+  "Weight:": "Вага:",
+  "Weight": "Вага",
   "HH:mm": "HH:mm",
   "MMMM d, yyyy": "d MMMM yyyy р.",
-  "MMM d, yyyy": "d MMM yyyy р."
+  "MMM d, yyyy": "d MMM yyyy р.",
+   "kg": "кг",
+  "kcal": "ккал"
 }

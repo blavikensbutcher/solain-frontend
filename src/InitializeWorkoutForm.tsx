@@ -50,17 +50,26 @@ export default function InitializeWorkoutForm(props: {
 
     setIsLoading(true);
 
-    const form = e.target as HTMLFormElement;
-    const name = (form.elements.namedItem("name") as any).value || "My workout";
-    const reps = Number((form.elements.namedItem("reps") as any).value || 0);
-    const sets = Number((form.elements.namedItem("sets") as any).value || 0);
+    const formEl = e.target as HTMLFormElement;
+    const name =
+      (formEl.elements.namedItem("name") as any).value || "My workout";
+    const reps = Number((formEl.elements.namedItem("reps") as any).value || 0);
+    const sets = Number((formEl.elements.namedItem("sets") as any).value || 0);
     const duration_sec = Number(
-      (form.elements.namedItem("duration_sec") as any).value || 0
+      (formEl.elements.namedItem("duration_sec") as any).value || 0
     );
-    const calories = Number((form.elements.namedItem("calories") as any).value || 0);
+    const calories = Number(
+      (formEl.elements.namedItem("calories") as any).value || 0
+    );
     const difficulty = Number(
-      (form.elements.namedItem("difficulty") as any).value || 1
+      (formEl.elements.namedItem("difficulty") as any).value || 1
     );
+    const weight_lifted_raw = (
+      formEl.elements.namedItem("weight_lifted") as any
+    )?.value;
+    const weight_lifted = weight_lifted_raw
+      ? Number(weight_lifted_raw)
+      : undefined;
 
     try {
       if (!idl) {
@@ -83,6 +92,7 @@ export default function InitializeWorkoutForm(props: {
           calories,
           difficulty,
           category,
+          weight_lifted,
         },
       });
 
@@ -92,14 +102,13 @@ export default function InitializeWorkoutForm(props: {
           tx: result.txSignature.substring(0, 8) + "...",
         })
       );
-      
-      form.reset();
+
+      formEl.reset();
       setCategory("STRENGTH");
 
       if (onSuccess) {
         onSuccess();
       }
-
     } catch (err: any) {
       console.error("Full error:", err);
       setStatus("Error: " + (err?.message || err?.toString?.()));
@@ -112,7 +121,9 @@ export default function InitializeWorkoutForm(props: {
     <Card className="w-full">
       <CardHeader>
         <CardTitle>{t("Create Workout 💪")}</CardTitle>
-        <CardDescription>{t("Add a new workout to your training program on Solana")}</CardDescription>
+        <CardDescription>
+          {t("Add a new workout to your training program on Solana")}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={callInitializeWorkout} className="space-y-4">
@@ -187,23 +198,32 @@ export default function InitializeWorkoutForm(props: {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category">{t("Category")}</Label>
-              <Select 
-                value={category} 
-                onValueChange={setCategory}
-              >
-                <SelectTrigger id="category" className="bg-background  w-full">
-                  <SelectValue placeholder={t("Select category")} />
-                </SelectTrigger>
-                <SelectContent position="popper" className="bg-background z-50">
-                  <SelectItem value="STRENGTH">{t("Strength")}</SelectItem>
-                  <SelectItem value="CARDIO">{t("Cardio")}</SelectItem>
-                  <SelectItem value="ENDURANCE">{t("Endurance")}</SelectItem>
-                  <SelectItem value="HIIT">{t("HIIT")}</SelectItem>
-                  <SelectItem value="FUNCTIONAL">{t("Functional")}</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="weight_lifted">{t("Weight (kg)")}</Label>
+              <Input
+                id="weight_lifted"
+                name="weight_lifted"
+                type="number"
+                min={0}
+                step={0.5}
+                placeholder={t("e.g., 60")}
+              />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category">{t("Category")}</Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger id="category" className="bg-background w-full">
+                <SelectValue placeholder={t("Select category")} />
+              </SelectTrigger>
+              <SelectContent position="popper" className="bg-background z-50">
+                <SelectItem value="STRENGTH">{t("Strength")}</SelectItem>
+                <SelectItem value="CARDIO">{t("Cardio")}</SelectItem>
+                <SelectItem value="ENDURANCE">{t("Endurance")}</SelectItem>
+                <SelectItem value="HIIT">{t("HIIT")}</SelectItem>
+                <SelectItem value="FUNCTIONAL">{t("Functional")}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <Button type="submit" className="w-full mt-6" disabled={isLoading}>
@@ -213,7 +233,10 @@ export default function InitializeWorkoutForm(props: {
         </form>
 
         {status && (
-          <Alert className="mt-4" variant={status.startsWith("✅") ? "default" : "destructive"}>
+          <Alert
+            className="mt-4"
+            variant={status.startsWith("✅") ? "default" : "destructive"}
+          >
             <AlertDescription>{status}</AlertDescription>
           </Alert>
         )}
