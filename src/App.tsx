@@ -4,6 +4,7 @@ import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import idlJson from "./idl/solain.json";
 import Header from "./components/Header";
+import { useTranslation } from "react-i18next";
 import InitializeWorkoutForm from "./InitializeWorkoutForm";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dumbbell } from "lucide-react";
@@ -21,6 +22,7 @@ function isMobile(): boolean {
 }
 
 function App() {
+  const { t } = useTranslation();
   const [provider, setProvider] = useState<anchor.AnchorProvider | null>(null);
   const [walletPubkey, setWalletPubkey] = useState<PublicKey | null>(null);
   
@@ -77,7 +79,7 @@ function App() {
       const allWorkouts = await program.account.workout.all([
         {
           memcmp: {
-            offset: 8, 
+            offset: 16, 
             bytes: walletPubkey.toBase58(),
           },
         },
@@ -115,10 +117,10 @@ function App() {
                 </div>
                 <div className="text-center space-y-2">
                   <h2 className="text-2xl font-semibold">
-                    Welcome to Solain 👋
+                    {t("Welcome to Solain 👋")}
                   </h2>
                   <p className="text-muted-foreground">
-                    Connect your wallet to start tracking your workouts on-chain
+                    {t("Connect your wallet to start tracking your workouts on-chain")}
                   </p>
                 </div>
                 {!walletPubkey && isMobile() ? (
@@ -131,11 +133,11 @@ function App() {
                       );
                     }}
                   >
-                    Open in Phantom App
+                    {t("Open in Phantom App")}
                   </Button>
                 ) : (
-                  <Button onClick={connectWallet}>
-                    Connect Phantom Wallet
+                    <Button onClick={connectWallet}>
+                    {t("Connect Phantom Wallet")}
                   </Button>
                 )}
               </CardContent>

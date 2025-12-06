@@ -26,6 +26,25 @@ Solain is a decentralized fitness tracking application built on Solana blockchai
 6. **Delete Workout** - Remove unwanted workouts with confirmation dialog
 7. **Track Progress** - Monitor calories burned, difficulty levels, and workout volume
 
+## i18n Support
+
+This project now includes `i18next` + `react-i18next` with Ukrainian (`uk`) as the default language.
+
+- Install new dependencies:
+
+```bash
+npm install i18next react-i18next
+```
+
+- i18n initialization: `src/i18n.ts`
+- Locale files: `src/locales/en.json`, `src/locales/uk.json`
+
+Run the dev server after installing:
+
+```bash
+npm install
+npm run dev
+```
 ## Program Architecture
 The Solain program uses a sophisticated architecture with two main account types and four core instructions. The program leverages PDAs for both global configuration and individual workout accounts, ensuring scalability and user data isolation.
 

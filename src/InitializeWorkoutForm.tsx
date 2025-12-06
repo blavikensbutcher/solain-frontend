@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { initializeWorkoutInstruction } from "@/lib/workoutInstructions";
+import { useTranslation } from "react-i18next";
 
 if (typeof window !== "undefined") {
   window.Buffer = Buffer;
@@ -35,6 +36,7 @@ export default function InitializeWorkoutForm(props: {
   onSuccess?: () => void;
 }) {
   const { provider, idl, walletPubkey, onSuccess } = props;
+  const { t } = useTranslation();
   const [status, setStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [category, setCategory] = useState<string>("STRENGTH");
@@ -42,7 +44,7 @@ export default function InitializeWorkoutForm(props: {
   const callInitializeWorkout = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!provider || !walletPubkey) {
-      alert("Connect wallet first");
+      alert(t("Connect wallet first"));
       return;
     }
 
@@ -68,7 +70,7 @@ export default function InitializeWorkoutForm(props: {
       }
 
       const program = new anchor.Program(idl, provider);
-      setStatus("Submitting workout...");
+      setStatus(t("Submitting workout..."));
 
       const result = await initializeWorkoutInstruction({
         program,
@@ -85,10 +87,10 @@ export default function InitializeWorkoutForm(props: {
       });
 
       setStatus(
-        `✅ Workout #${result.workoutId.toString()} created! Tx: ${result.txSignature.substring(
-          0,
-          8
-        )}...`
+        t("workoutCreated", {
+          id: result.workoutId.toString(),
+          tx: result.txSignature.substring(0, 8) + "...",
+        })
       );
       
       form.reset();
@@ -109,27 +111,25 @@ export default function InitializeWorkoutForm(props: {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Create Workout 💪</CardTitle>
-        <CardDescription>
-          Add a new workout to your training program on Solana
-        </CardDescription>
+        <CardTitle>{t("Create Workout 💪")}</CardTitle>
+        <CardDescription>{t("Add a new workout to your training program on Solana")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={callInitializeWorkout} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Workout Name</Label>
+            <Label htmlFor="name">{t("Workout Name")}</Label>
             <Input
               id="name"
               name="name"
-              defaultValue="Push-ups"
-              placeholder="e.g., Push-ups"
+              defaultValue={t("Push-ups")}
+              placeholder={t("e.g., Push-ups")}
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="reps">Reps</Label>
+              <Label htmlFor="reps">{t("Reps")}</Label>
               <Input
                 id="reps"
                 name="reps"
@@ -139,7 +139,7 @@ export default function InitializeWorkoutForm(props: {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sets">Sets</Label>
+              <Label htmlFor="sets">{t("Sets")}</Label>
               <Input
                 id="sets"
                 name="sets"
@@ -152,7 +152,7 @@ export default function InitializeWorkoutForm(props: {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="duration_sec">Duration (seconds)</Label>
+              <Label htmlFor="duration_sec">{t("Duration (seconds)")}</Label>
               <Input
                 id="duration_sec"
                 name="duration_sec"
@@ -162,7 +162,7 @@ export default function InitializeWorkoutForm(props: {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="calories">Calories</Label>
+              <Label htmlFor="calories">{t("Calories")}</Label>
               <Input
                 id="calories"
                 name="calories"
@@ -175,7 +175,7 @@ export default function InitializeWorkoutForm(props: {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="difficulty">Difficulty (1-10)</Label>
+              <Label htmlFor="difficulty">{t("Difficulty (1-10)")}</Label>
               <Input
                 id="difficulty"
                 name="difficulty"
@@ -187,20 +187,20 @@ export default function InitializeWorkoutForm(props: {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">{t("Category")}</Label>
               <Select 
                 value={category} 
                 onValueChange={setCategory}
               >
                 <SelectTrigger id="category" className="bg-background  w-full">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder={t("Select category")} />
                 </SelectTrigger>
                 <SelectContent position="popper" className="bg-background z-50">
-                  <SelectItem value="STRENGTH">Strength</SelectItem>
-                  <SelectItem value="CARDIO">Cardio</SelectItem>
-                  <SelectItem value="ENDURANCE">Endurance</SelectItem>
-                  <SelectItem value="HIIT">HIIT</SelectItem>
-                  <SelectItem value="FUNCTIONAL">Functional</SelectItem>
+                  <SelectItem value="STRENGTH">{t("Strength")}</SelectItem>
+                  <SelectItem value="CARDIO">{t("Cardio")}</SelectItem>
+                  <SelectItem value="ENDURANCE">{t("Endurance")}</SelectItem>
+                  <SelectItem value="HIIT">{t("HIIT")}</SelectItem>
+                  <SelectItem value="FUNCTIONAL">{t("Functional")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -208,7 +208,7 @@ export default function InitializeWorkoutForm(props: {
 
           <Button type="submit" className="w-full mt-6" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLoading ? "Creating..." : "Create Workout"}
+            {isLoading ? t("Creating...") : t("Create Workout")}
           </Button>
         </form>
 

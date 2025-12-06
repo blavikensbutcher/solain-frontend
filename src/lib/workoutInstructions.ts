@@ -73,6 +73,9 @@ export async function initializeWorkoutInstruction({
   const nextWorkoutId = normalizeNumber(configAccount.nextWorkoutId);
   const workoutIdBn = numberLikeToBn(nextWorkoutId);
   const workoutPda = getWorkoutPda(program.programId, walletPubkey, workoutIdBn);
+  
+  const userProfilePda = getUserProfilePda(program.programId, walletPubkey);
+  await ensureUserProfileInitialized(program, walletPubkey, userProfilePda);
 
   const txSignature = await program.methods
     .initializeWorkout(
@@ -83,12 +86,14 @@ export async function initializeWorkoutInstruction({
       form.duration_sec,
       form.calories,
       form.difficulty,
-      form.category
+      form.category,
+      null
     )
     .accounts({
       config: configPda,
       workoutAuthority: walletPubkey,
       workout: workoutPda,
+      userProfile: userProfilePda,
       systemProgram: SystemProgram.programId,
     })
     .rpc();
@@ -100,6 +105,44 @@ export async function initializeWorkoutInstruction({
     txSignature,
   };
 }
+
+function getUserProfilePda(programId: PublicKey, walletPubkey: PublicKey) {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("user_profile"), walletPubkey.toBuffer()],
+    programId
+  )[0];
+}
+
+async function ensureUserProfileInitialized(
+  program: anchor.Program,
+  walletPubkey: PublicKey,
+  userProfilePda: PublicKey
+) {
+  try {
+    return await program.account.userProfile.fetch(userProfilePda);
+  } catch (error) {
+    await program.methods
+      .initializeProfile(
+        75,
+        180,
+        25,
+        0,
+        70,
+        3,
+        500
+      )
+      .accounts({
+        userProfile: userProfilePda,
+        user: walletPubkey,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc();
+    
+    return await program.account.userProfile.fetch(userProfilePda);
+  }
+}
+
+
 
 export async function updateWorkoutInstruction({
   program,

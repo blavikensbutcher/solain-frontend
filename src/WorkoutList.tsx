@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import * as anchor from "@coral-xyz/anchor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   Pencil,
   Trash,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,12 +52,14 @@ const isYesterday = (date: Date) => {
 };
 
 export default function WorkoutList({
+  workouts,
+  loading,
   provider,
   idl,
   walletPubkey,
+  onUpdate,
 }: WorkoutListProps) {
-  const [workouts, setWorkouts] = useState<WorkoutAccountResult[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
   const [editingWorkout, setEditingWorkout] =
     useState<WorkoutAccountResult | null>(null);
   const [form, setForm] = useState<WorkoutFormState>({
@@ -72,42 +75,6 @@ export default function WorkoutList({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [workoutToDelete, setWorkoutToDelete] =
     useState<WorkoutAccountResult | null>(null);
-
-  const fetchWorkouts = async () => {
-    if (!provider || !idl || !walletPubkey) return;
-
-    setLoading(true);
-    try {
-      const program = new anchor.Program(idl, provider);
-      
-      const allWorkoutsRaw = await program.account.workout.all([
-        {
-          memcmp: {
-            offset: 8,
-            bytes: walletPubkey.toBase58(),
-          },
-        },
-      ]);
-
-      const allWorkouts = allWorkoutsRaw as unknown as WorkoutAccountResult[];
-
-      setWorkouts(
-        allWorkouts.sort((a, b) => {
-          const tsA = a.account.timestamp ? a.account.timestamp.toNumber() : 0;
-          const tsB = b.account.timestamp ? b.account.timestamp.toNumber() : 0;
-          return tsB - tsA;
-        })
-      );
-    } catch (err) {
-      console.error("Failed to fetch workouts:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchWorkouts();
-  }, [provider, walletPubkey]);
 
   const groupedWorkouts = useMemo(() => {
     const groups: Record<string, WorkoutAccountResult[]> = {};
@@ -127,9 +94,9 @@ export default function WorkoutList({
       });
 
       if (isToday(date)) {
-        groupTitle = "Today";
+        groupTitle = t("Today");
       } else if (isYesterday(date)) {
-        groupTitle = "Yesterday";
+        groupTitle = t("Yesterday");
       }
 
       if (!groups[groupTitle]) {
@@ -182,7 +149,7 @@ export default function WorkoutList({
         form,
       });
       closeEditDialog();
-      fetchWorkouts();
+      if (onUpdate) onUpdate();
     } catch (e) {
       alert("Failed to update workout: " + e);
     }
@@ -200,7 +167,7 @@ export default function WorkoutList({
       });
       setShowDeleteConfirm(false);
       setWorkoutToDelete(null);
-      fetchWorkouts();
+      if (onUpdate) onUpdate();
     } catch (e) {
       alert("Failed to delete workout: " + e);
     }
@@ -227,14 +194,14 @@ export default function WorkoutList({
     <Card className="border-none shadow-none bg-transparent h-full flex flex-col">
       <CardHeader className="px-0 pt-0 shrink-0">
         <div className="flex items-center justify-between mb-2">
-          <CardTitle className="text-xl">Your Workouts</CardTitle>
+          <CardTitle className="text-xl">{t("Your Workouts")}</CardTitle>
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchWorkouts}
+            onClick={onUpdate}
             className="h-8"
           >
-            Refresh
+            {t("Refresh")}
           </Button>
         </div>
       </CardHeader>
@@ -244,7 +211,7 @@ export default function WorkoutList({
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <p className="text-sm text-muted-foreground">Fetching data...</p>
+              <p className="text-sm text-muted-foreground">{t("Fetching data...")}</p>
             </div>
           ) : workouts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4 text-center border border-dashed rounded-xl bg-background/50">
@@ -252,9 +219,9 @@ export default function WorkoutList({
                 <Dumbbell className="h-8 w-8 text-muted-foreground/50" />
               </div>
               <div className="space-y-1">
-                <p className="font-medium">No workouts found</p>
+                <p className="font-medium">{t("No workouts found")}</p>
                 <p className="text-sm text-muted-foreground">
-                  Create your first workout to get started
+                  {t("Create your first workout to get started")}
                 </p>
               </div>
             </div>
@@ -286,7 +253,10 @@ export default function WorkoutList({
                                 workout.account.category
                               )}`}
                             >
-                              {workout.account.category}
+                              {t(
+                                workout.account.category.charAt(0) +
+                                  workout.account.category.slice(1).toLowerCase()
+                              )}
                             </Badge>
                           </div>
 
@@ -305,7 +275,7 @@ export default function WorkoutList({
                                 <DropdownMenuItem
                                   onClick={() => openEditDialog(workout)}
                                 >
-                                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                                  <Pencil className="mr-2 h-4 w-4" /> {t("Edit")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
@@ -314,7 +284,7 @@ export default function WorkoutList({
                                     setShowDeleteConfirm(true);
                                   }}
                                 >
-                                  <Trash className="mr-2 h-4 w-4" /> Delete
+                                  <Trash className="mr-2 h-4 w-4" /> {t("Delete")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -325,10 +295,11 @@ export default function WorkoutList({
                           <div className="flex items-center gap-1.5 min-w-[80px]">
                             <Dumbbell className="h-3.5 w-3.5 text-primary/70" />
                             <span>
+                              {t("Sets")}:{" "}
                               <span className="font-medium text-foreground">
                                 {workout.account.sets}
                               </span>{" "}
-                              sets ×{" "}
+                              ×{" "}
                               <span className="font-medium text-foreground">
                                 {workout.account.reps}
                               </span>
@@ -337,17 +308,17 @@ export default function WorkoutList({
 
                           <div className="flex items-center gap-1.5 min-w-[80px]">
                             <Clock className="h-3.5 w-3.5 text-primary/70" />
-                            <span>{workout.account.durationSec}s</span>
+                            <span>{workout.account.durationSec}с</span>
                           </div>
 
                           <div className="flex items-center gap-1.5 min-w-[80px]">
                             <Flame className="h-3.5 w-3.5 text-primary/70" />
-                            <span>{workout.account.calories} kcal</span>
+                            <span>{workout.account.calories} ккал</span>
                           </div>
 
                           <div className="flex items-center gap-1.5 min-w-[80px]">
                             <TrendingUp className="h-3.5 w-3.5 text-primary/70" />
-                            <span>Lvl {workout.account.difficulty}</span>
+                            <span>{t("Lvl")} {workout.account.difficulty}</span>
                           </div>
                         </div>
                       </div>
@@ -392,14 +363,14 @@ export default function WorkoutList({
           <ConfirmDialog
             open={showDeleteConfirm}
             onOpenChange={setShowDeleteConfirm}
-            title="Confirm Deletion"
-            description="This action cannot be undone."
+            title={t("Confirm Deletion")}
+            description={t("This action cannot be undone.")}
             onConfirm={deleteWorkout}
-            confirmText="Delete"
-            cancelText="Cancel"
+            confirmText={t("Delete")}
+            cancelText={t("Cancel")}
           >
             <p>
-              Are you sure you want to delete the workout "
+              {t("Are you sure you want to delete the workout")} "
               {workoutToDelete?.account.name}"?
             </p>
           </ConfirmDialog>

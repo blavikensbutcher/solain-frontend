@@ -2,11 +2,14 @@ import { PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 
 export interface WorkoutListProps {
+  workouts: WorkoutAccountResult[];
+  loading: boolean;
   provider: anchor.AnchorProvider | null;
   idl: anchor.Idl | null;
-
-  walletPubkey: PublicKey | null; 
+  walletPubkey: PublicKey | null;
+  onUpdate: () => void;
 }
+
 
 export interface WorkoutFormState {
   name: string;

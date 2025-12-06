@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Trophy, Activity, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 import { WorkoutAccountResult } from "./types/workout.types";
 
 interface WorkoutSummaryProps {
@@ -20,6 +21,7 @@ type ExerciseSummary = {
 };
 
 export function WorkoutSummary({ workouts }: WorkoutSummaryProps) {
+  const { t } = useTranslation();
 
   const getSummary = (): ExerciseSummary[] => {
     const groupedByName: Record<string, WorkoutAccountResult[]> = {};
@@ -49,14 +51,14 @@ export function WorkoutSummary({ workouts }: WorkoutSummaryProps) {
       };
     });
 
-    // Сортуємо вправи: спочатку ті, що робили нещодавно
+
     return summaries.sort((a, b) => b.lastPerformance.date.getTime() - a.lastPerformance.date.getTime());
   };
 
   const summaryData = getSummary();
 
   if (summaryData.length === 0) {
-    return null; // Не показуємо нічого, якщо даних немає
+    return null;
   }
 
   return (
@@ -64,7 +66,7 @@ export function WorkoutSummary({ workouts }: WorkoutSummaryProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-yellow-500" />
-          Exercise Summary
+          {t("Exercise Summary")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -75,10 +77,10 @@ export function WorkoutSummary({ workouts }: WorkoutSummaryProps) {
           >
             <div className="space-y-1">
               <h4 className="font-semibold text-sm">{item.name}</h4>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Activity className="h-3 w-3" />
-                  Last: {item.lastPerformance.sets}×{item.lastPerformance.reps}
+                  {t("Last:")} {item.lastPerformance.sets}×{item.lastPerformance.reps}
                 </span>
                 <span className="flex items-center gap-1">
                   <CalendarDays className="h-3 w-3" />
@@ -89,10 +91,10 @@ export function WorkoutSummary({ workouts }: WorkoutSummaryProps) {
             
             <div className="flex flex-col items-end gap-1">
               <span className="text-xs font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                Total: {item.totalSessions}
+                {t("Total:")} {item.totalSessions}
               </span>
               <span className="text-[10px] text-muted-foreground">
-                Lvl {item.lastPerformance.difficulty}
+                {t("Lvl")} {item.lastPerformance.difficulty}
               </span>
             </div>
           </div>

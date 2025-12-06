@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ export function ConfirmDialog({
   children,
 }: ConfirmDialogProps) {
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   const handleConfirm = async () => {
     setLoading(true);
@@ -41,10 +43,10 @@ export function ConfirmDialog({
         {children}
         <div className="mt-6 flex justify-end gap-4">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            {cancelText}
+            {t(cancelText)}
           </Button>
           <Button variant="destructive" onClick={handleConfirm} disabled={loading}>
-            {confirmText}
+            {t(confirmText)}
           </Button>
         </div>
       </DialogContent>
