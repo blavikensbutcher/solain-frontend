@@ -63,7 +63,7 @@ export default function Header({
 
   const requestAirdrop = async () => {
     if (!walletPubkey || !provider) return;
-    
+
     setIsAirdropping(true);
     try {
       const signature = await provider.connection.requestAirdrop(
@@ -108,7 +108,7 @@ export default function Header({
                 <Globe className="h-4 w-4" />
                 <span className="sr-only">{t("Language")}</span>
               </Button>
-              
+
               {showLangMenu && (
                 <div className="absolute right-0 mt-2 w-32 bg-background border rounded-md shadow-lg z-50">
                   <button
@@ -132,9 +132,7 @@ export default function Header({
             </div>
           )}
 
-         
-
-          {walletPubkey && balance && balance < 5 && (
+          {walletPubkey && balance !== null && balance < 5 && (
             <Button
               onClick={requestAirdrop}
               variant="outline"
@@ -148,7 +146,7 @@ export default function Header({
             </Button>
           )}
 
-           {walletPubkey && balance !== null && (
+          {walletPubkey && balance !== null && (
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20">
               <Coins className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium text-primary">
@@ -160,15 +158,15 @@ export default function Header({
           {walletPubkey ? (
             <div className="flex items-center gap-2 sm:gap-3 bg-muted/50 py-1 px-2 rounded-full border sm:border-none sm:bg-transparent sm:p-0">
               <Wallet className="w-3 h-3 sm:hidden text-muted-foreground" />
-              
+
               <span className="text-xs sm:text-sm text-muted-foreground font-mono font-medium">
                 {walletPubkey.toString().slice(0, 4)}...
                 {walletPubkey.toString().slice(-4)}
               </span>
 
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 className="h-8 w-8 sm:hidden text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                 onClick={onDisconnectWallet}
               >
@@ -176,9 +174,9 @@ export default function Header({
                 <span className="sr-only">{t("Disconnect")}</span>
               </Button>
 
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="hidden sm:flex"
                 onClick={onDisconnectWallet}
               >
@@ -186,8 +184,13 @@ export default function Header({
               </Button>
             </div>
           ) : (
-            <Button size="sm" onClick={onConnectWallet} className="text-xs sm:text-sm px-3 sm:px-4">
-              {t("Connect")} <span className="hidden sm:inline ml-1">{t("Wallet")}</span>
+            <Button
+              size="sm"
+              onClick={onConnectWallet}
+              className="text-xs sm:text-sm px-3 sm:px-4"
+            >
+              {t("Connect")}{" "}
+              <span className="hidden sm:inline ml-1">{t("Wallet")}</span>
             </Button>
           )}
         </div>
