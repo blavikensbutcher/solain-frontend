@@ -8,6 +8,8 @@ import {
   Clock,
   Flame,
   TrendingUp,
+  Copy,
+  Check,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
@@ -20,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 
 interface WorkoutSummaryProps {
   workouts: WorkoutAccountResult[];
@@ -39,6 +42,18 @@ type ExerciseSummary = {
 export function WorkoutSummary({ workouts }: WorkoutSummaryProps) {
   const { t, i18n } = useTranslation();
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
+  const [copiedExercise, setCopiedExercise] = useState<string | null>(null);
+
+  const copyToClipboard = async (text: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedExercise(text);
+      setTimeout(() => setCopiedExercise(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
 
   const getSummary = (): ExerciseSummary[] => {
     const groupedByName: Record<string, WorkoutAccountResult[]> = {};
@@ -143,8 +158,24 @@ export function WorkoutSummary({ workouts }: WorkoutSummaryProps) {
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Dumbbell className="h-5 w-5 text-primary" />
-              {selectedExercise}
+              <div className="flex items-center gap-2">
+                <Dumbbell className="h-5 w-5 text-primary" />
+                {selectedExercise}
+              </div>
+              {selectedExercise && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={(e) => copyToClipboard(selectedExercise, e)}
+                >
+                  {copiedExercise === selectedExercise ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
             </DialogTitle>
           </DialogHeader>
 
@@ -220,7 +251,6 @@ export function WorkoutSummary({ workouts }: WorkoutSummaryProps) {
                           <Clock className="h-4 w-4 text-primary/70" />
                           <span>{workout.account.durationSec}с</span>
                         </div>
-
 
                         <div className="flex items-center gap-2">
                           <TrendingUp className="h-4 w-4 text-primary/70" />

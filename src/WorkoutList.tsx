@@ -11,6 +11,8 @@ import {
   TrendingUp,
   Pencil,
   Trash,
+  Copy,
+  Check,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "./components/ConfirmDialog";
@@ -69,6 +71,22 @@ export default function WorkoutList({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [workoutToDelete, setWorkoutToDelete] =
     useState<WorkoutAccountResult | null>(null);
+
+  const [copiedName, setCopiedName] = useState<string | null>(null);
+
+  const copyName = async (
+    name: string,
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(name);
+      setCopiedName(name);
+      setTimeout(() => setCopiedName(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
 
   const groupedWorkouts = useMemo(() => {
     const groups: Record<string, WorkoutAccountResult[]> = {};
@@ -239,11 +257,26 @@ export default function WorkoutList({
                       className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border bg-card text-card-foreground shadow-sm hover:shadow-md transition-all duration-200"
                     >
                       <div className="flex-1 space-y-3 sm:space-y-1">
-                        <div className="flex items-start justify-between">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1">
-                            <h3 className="font-semibold text-base sm:text-lg leading-none tracking-tight">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex flex-1 items-center gap-2 sm:gap-3 min-w-0">
+                            <h3 className="font-semibold text-base sm:text-lg leading-none tracking-tight truncate">
                               {workout.account.name}
                             </h3>
+
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+                              onClick={(e) => copyName(workout.account.name, e)}
+                              aria-label={t("Copy workout name")}
+                            >
+                              {copiedName === workout.account.name ? (
+                                <Check className="h-3.5 w-3.5 text-green-500" />
+                              ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+
                             <Badge
                               variant="outline"
                               className={`w-fit text-[10px] sm:text-xs px-2 py-0.5 border ${getCategoryStyle(
@@ -252,12 +285,13 @@ export default function WorkoutList({
                             >
                               {t(
                                 workout.account.category.charAt(0) +
-                                  workout.account.category.slice(1).toLowerCase()
+                                  workout.account.category
+                                    .slice(1)
+                                    .toLowerCase()
                               )}
                             </Badge>
                           </div>
 
-                          {/* МОБІЛЬНІ КНОПКИ - ПРОСТІ ТА НАДІЙНІ */}
                           <div className="sm:hidden flex gap-1 pt-1">
                             <Button
                               variant="ghost"
@@ -330,7 +364,6 @@ export default function WorkoutList({
                         </div>
                       </div>
 
-                      {/* ДЕСКТОПНІ КНОПКИ */}
                       <div className="hidden sm:flex items-center gap-2 ml-4">
                         <Button
                           variant="ghost"
