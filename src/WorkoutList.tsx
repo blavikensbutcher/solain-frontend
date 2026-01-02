@@ -91,6 +91,7 @@ export default function WorkoutList({
   const groupedWorkouts = useMemo(() => {
     const groups: Record<string, WorkoutAccountResult[]> = {};
     const order: string[] = [];
+    const dateMap: Record<string, Date> = {};
 
     workouts.forEach((workout) => {
       const ts = workout.account.timestamp
@@ -114,9 +115,12 @@ export default function WorkoutList({
       if (!groups[groupTitle]) {
         groups[groupTitle] = [];
         order.push(groupTitle);
+        dateMap[groupTitle] = date;
       }
       groups[groupTitle].push(workout);
     });
+
+    order.sort((a, b) => dateMap[b].getTime() - dateMap[a].getTime());
 
     return order.map((title) => ({
       title,

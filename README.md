@@ -7,9 +7,11 @@
 ## Project Overview
 
 ### Description
+
 Solain is a decentralized fitness tracking application built on Solana blockchain. Users can create, manage, and track their workout routines entirely on-chain. Each workout is stored as a PDA (Program Derived Address) unique to the user's wallet, ensuring complete ownership and data persistence. The dApp demonstrates advanced Solana concepts including multi-account PDAs, program configuration state, and CRUD operations with authorization checks.
 
 ### Key Features
+
 - **Create Workouts**: Initialize personalized workout routines with detailed metrics (reps, sets, duration, calories, difficulty)
 - **Update Workouts**: Modify existing workout parameters while maintaining on-chain history
 - **Delete Workouts**: Remove workouts with proper authorization validation
@@ -18,6 +20,7 @@ Solain is a decentralized fitness tracking application built on Solana blockchai
 - **Category System**: Organize workouts by type (push, pull, legs, cardio, etc.)
 
 ### How to Use the dApp
+
 1. **Connect Wallet** - Connect your Phantom wallet to Solana Devnet
 2. **Initialize Program** - Program automatically initializes configuration on first workout creation
 3. **Create Workout** - Fill in workout details (name, reps, sets, duration, calories, difficulty, category)
@@ -45,18 +48,24 @@ Run the dev server after installing:
 npm install
 npm run dev
 ```
+
 ## Program Architecture
+
 The Solain program uses a sophisticated architecture with two main account types and four core instructions. The program leverages PDAs for both global configuration and individual workout accounts, ensuring scalability and user data isolation.
 
 ### PDA Usage
+
 The program uses Program Derived Addresses to create deterministic accounts for configuration and user workouts.
 
 **PDAs Used:**
+
 - **Config PDA**: Derived from seeds `["config"]` - global program state tracking workout IDs and admin
 - **Workout PDA**: Derived from seeds `["workout", user_wallet_pubkey, workout_id_bytes]` - unique workout account per user
 
 ### Program Instructions
+
 **Instructions Implemented:**
+
 - **Initialize**: Creates global program configuration with admin authority (runs once)
 - **Initialize Workout**: Creates a new workout account with full workout details and auto-increments global ID
 - **Update Workout**: Modifies existing workout fields with optional parameters (only owner can update)
