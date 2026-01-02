@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import * as anchor from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { Buffer } from "buffer";
@@ -34,12 +34,80 @@ export default function InitializeWorkoutForm(props: {
   programId: string;
   walletPubkey: PublicKey | null;
   onSuccess?: () => void;
+  existingWorkouts?: string[];
 }) {
-  const { provider, idl, walletPubkey, onSuccess } = props;
+  const {
+    provider,
+    idl,
+    walletPubkey,
+    onSuccess,
+    existingWorkouts = [],
+  } = props;
   const { t } = useTranslation();
   const [status, setStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [category, setCategory] = useState<string>("STRENGTH");
+  const [workoutName, setWorkoutName] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  const uniqueWorkoutNames = useMemo(() => {
+    return Array.from(new Set(existingWorkouts)).sort();
+  }, [existingWorkouts]);
+
+  const filteredSuggestions = useMemo(() => {
+    if (!workoutName.trim()) return uniqueWorkoutNames;
+    return uniqueWorkoutNames.filter((name) =>
+      name.toLowerCase().includes(workoutName.toLowerCase())
+    );
+  }, [workoutName, uniqueWorkoutNames]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setFocusedIndex((prev) =>
+          prev < filteredSuggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setFocusedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case "Enter":
+        if (focusedIndex >= 0 && filteredSuggestions[focusedIndex]) {
+          e.preventDefault();
+          setWorkoutName(filteredSuggestions[focusedIndex]);
+          setShowSuggestions(false);
+          setFocusedIndex(-1);
+        }
+        break;
+      case "Escape":
+        setShowSuggestions(false);
+        setFocusedIndex(-1);
+        break;
+    }
+  };
 
   const callInitializeWorkout = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,8 +119,7 @@ export default function InitializeWorkoutForm(props: {
     setIsLoading(true);
 
     const formEl = e.target as HTMLFormElement;
-    const name =
-      (formEl.elements.namedItem("name") as any).value || "My workout";
+    const name = workoutName || t("Push-ups");
     const reps = Number((formEl.elements.namedItem("reps") as any).value || 0);
     const sets = Number((formEl.elements.namedItem("sets") as any).value || 0);
     const duration_sec = Number(
@@ -105,6 +172,8 @@ export default function InitializeWorkoutForm(props: {
 
       formEl.reset();
       setCategory("STRENGTH");
+      setWorkoutName("");
+      setShowSuggestions(false);
 
       if (onSuccess) {
         onSuccess();
@@ -127,15 +196,54 @@ export default function InitializeWorkoutForm(props: {
       </CardHeader>
       <CardContent>
         <form onSubmit={callInitializeWorkout} className="space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-2 relative">
             <Label htmlFor="name">{t("Workout Name")}</Label>
             <Input
+              ref={inputRef}
               id="name"
               name="name"
-              defaultValue={t("Push-ups")}
+              value={workoutName}
+              onChange={(e) => {
+                setWorkoutName(e.target.value);
+                setShowSuggestions(true);
+                setFocusedIndex(-1);
+              }}
+              onFocus={() => setShowSuggestions(true)}
+              onKeyDown={handleKeyDown}
               placeholder={t("e.g., Push-ups")}
+              autoComplete="off"
               required
             />
+            {showSuggestions && filteredSuggestions.length > 0 && (
+              <div
+                ref={suggestionsRef}
+                className="absolute z-50 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-60 overflow-auto"
+              >
+                <div className="py-1">
+                  <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground">
+                    {t("Recent workouts")}
+                  </div>
+                  {filteredSuggestions.map((name, index) => (
+                    <div
+                      key={name}
+                      className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
+                        index === focusedIndex
+                          ? "bg-primary text-primary-foreground"
+                          : "text-foreground hover:bg-accent hover:text-accent-foreground"
+                      }`}
+                      onClick={() => {
+                        setWorkoutName(name);
+                        setShowSuggestions(false);
+                        setFocusedIndex(-1);
+                      }}
+                      onMouseEnter={() => setFocusedIndex(index)}
+                    >
+                      {name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

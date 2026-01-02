@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import * as anchor from "@coral-xyz/anchor";
 import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
 import { AnchorProvider } from "@coral-xyz/anchor";
@@ -28,6 +28,10 @@ function App() {
 
   const [workouts, setWorkouts] = useState<WorkoutAccountResult[]>([]);
   const [loadingWorkouts, setLoadingWorkouts] = useState(false);
+
+  const uniqueWorkoutNames = useMemo(() => {
+    return workouts.map((w) => w.account.name);
+  }, [workouts]);
 
   async function connectWallet() {
     if (!(window as any).solana) {
@@ -155,6 +159,7 @@ function App() {
                 programId={PROGRAM_ID}
                 walletPubkey={walletPubkey}
                 onSuccess={fetchWorkouts}
+                existingWorkouts={uniqueWorkoutNames}
               />
 
               <WorkoutList
